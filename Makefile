@@ -2,7 +2,7 @@ DIR_INC := ./inc
 DIR_SRC := ./src
 DIR_OBJ := ./obj
 
-PREFIX ?= /usr/local
+PREFIX :=$(shell pwd)
 BINDIR ?= $(PREFIX)/bin
 INCLUDE_DIRS ?=
 LIBRARY_DIRS ?=
@@ -14,7 +14,7 @@ TARGET := fastp
 
 BIN_TARGET := ${TARGET}
 
-CXX ?= g++
+CXX ?= g++ -Wl,--rpath=$(PREFIX)/lib
 CXXFLAGS := -std=c++11 -pthread -g -O3 -I${DIR_INC} $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir)) ${CXXFLAGS}
 LIBS := -lisal -ldeflate -lpthread
 STATIC_FLAGS := -static -Wl,--no-as-needed -pthread

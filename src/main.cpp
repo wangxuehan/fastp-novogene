@@ -121,6 +121,7 @@ int main(int argc, char* argv[]){
     cmd.add<int>("overlap_len_require", 0, "the minimum length to detect overlapped region of PE reads. This will affect overlap analysis based PE merge, adapter trimming and correction. 30 by default.", false, 30);
     cmd.add<int>("overlap_diff_limit", 0, "the maximum number of mismatched bases to detect overlapped region of PE reads. This will affect overlap analysis based PE merge, adapter trimming and correction. 5 by default.", false, 5);
     cmd.add<int>("overlap_diff_percent_limit", 0, "the maximum percentage of mismatched bases to detect overlapped region of PE reads. This will affect overlap analysis based PE merge, adapter trimming and correction. Default 20 means 20%.", false, 20);
+    cmd.add<int>("min_trim_length", 0, "the minimum overlap length to trim, 10 by default. by novogene", false, 10);
 
     // umi
     cmd.add("umi", 'U', "enable unique molecular identifier (UMI) preprocessing");
@@ -145,6 +146,7 @@ int main(int argc, char* argv[]){
     cmd.add<int>("split", 's', "split output by limiting total split file number with this option (2~999), a sequential number prefix will be added to output name ( 0001.out.fq, 0002.out.fq...), disabled by default", false, 0);
     cmd.add<long>("split_by_lines", 'S', "split output by limiting lines of each file with this option(>=1000), a sequential number prefix will be added to output name ( 0001.out.fq, 0002.out.fq...), disabled by default", false, 0);
     cmd.add<int>("split_prefix_digits", 'd', "the digits for the sequential number padding (1~10), default is 4, so the filename will be padded as 0001.xxx, 0 to disable padding", false, 4);
+    cmd.add<long>("clean_reads", 'C', "number of clean reads of output, BE CAREFULL: 1000 raw reads are dealed once time, so the read number of clean will be a little different. Default is none. by novogene", false, 0);
 
     // deprecated options
     cmd.add("cut_by_quality5", 0, "DEPRECATED, use --cut_front instead.");
@@ -335,9 +337,16 @@ int main(int argc, char* argv[]){
     opt.overlapRequire = cmd.get<int>("overlap_len_require");
     opt.overlapDiffLimit = cmd.get<int>("overlap_diff_limit");
     opt.overlapDiffPercentLimit = cmd.get<int>("overlap_diff_percent_limit");
+    opt.minTrimLength = cmd.get<int>("min_trim_length");
 
     // threading
     opt.thread = cmd.get<int>("thread");
+    // add by novogene
+    if(cmd.exist("clean_reads")) {
+        opt.byCleanData = true;
+        opt.clean = cmd.get<long>("clean_reads");
+        opt.thread = 1;
+    }
 
     // reporting
     opt.jsonFile = cmd.get<string>("json");

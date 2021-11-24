@@ -23,11 +23,14 @@ Options::Options(){
     overlapRequire = 30;
     overlapDiffLimit = 5;
     overlapDiffPercentLimit = 20;
+    minTrimLength = 10;
     verbose = false;
     seqLen1 = 151;
     seqLen2 = 151;
     fixMGI = false;
     writerBufferSize = 0x01L<<22; // 4M writer buffer for per output by default
+    byCleanData = false;
+    clean = 0;
 }
 
 void Options::init() {

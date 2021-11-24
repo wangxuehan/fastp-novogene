@@ -415,7 +415,11 @@ ReadPair* FastqReaderPair::read(){
 		r = mLeft->read();
 	else
 		r = mRight->read();
-	if(!l || !r){
+	if(l && !r){
+		error_exit("Error in number of reads:  Read1 >  Read2");
+	}else if(!l && r){
+		error_exit("Error in number of reads:  Read1 <  Read2");
+	}else if(!l && !r){
 		return NULL;
 	} else {
 		return new ReadPair(l, r);

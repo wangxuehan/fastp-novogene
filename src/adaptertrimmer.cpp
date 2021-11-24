@@ -7,14 +7,15 @@ AdapterTrimmer::AdapterTrimmer(){
 AdapterTrimmer::~AdapterTrimmer(){
 }
 
-bool AdapterTrimmer::trimByOverlapAnalysis(Read* r1, Read* r2, FilterResult* fr, int diffLimit, int overlapRequire, double diffPercentLimit) {
+bool AdapterTrimmer::trimByOverlapAnalysis(Read* r1, Read* r2, FilterResult* fr, int diffLimit, int overlapRequire, double diffPercentLimit, int minTrimLength) {
     OverlapResult ov = OverlapAnalysis::analyze(r1, r2, diffLimit, overlapRequire, diffPercentLimit);
-    return trimByOverlapAnalysis(r1, r2, fr, ov);
+    return trimByOverlapAnalysis(r1, r2, fr, ov, minTrimLength, diffPercentLimit);
 }
 
-bool AdapterTrimmer::trimByOverlapAnalysis(Read* r1, Read* r2, FilterResult* fr, OverlapResult ov, int frontTrimmed1, int frontTrimmed2) {
+bool AdapterTrimmer::trimByOverlapAnalysis(Read* r1, Read* r2, FilterResult* fr, OverlapResult ov, int frontTrimmed1, int frontTrimmed2, int minTrimLength, double diffPercentLimit) {
     int ol = ov.overlap_len;
-    if(ov.overlapped && ov.offset < 0) {
+    double diff_ratio = ov.diff / (double) ov.overlap_len;
+    if(ov.overlapped && ov.offset < 0 && r1->length()-ol >= minTrimLength && diff_ratio < diffPercentLimit) {
 
         //5'      ......frontTrimmed1......|------------------------------------------|----- 3'
         //3' -----|-------------------------------------------|......frontTrimmed2.....      5'
@@ -29,7 +30,7 @@ bool AdapterTrimmer::trimByOverlapAnalysis(Read* r1, Read* r2, FilterResult* fr,
             cerr << adapter2 << endl;
             cerr << "frontTrimmed2: " << frontTrimmed1 << endl;
             cerr << "frontTrimmed2: " << frontTrimmed2 << endl;
-            cerr << "overlap:" << ov.offset << "," << ov.overlap_len << ", " << ov.diff << endl;
+            cerr << "overlap:" << ov.offset << "," << ov.overlap_len << ", " << ov.diff << ", " << diff_ratio << endl;
             r1->print();
             r2->reverseComplement()->print();
             cerr <<endl;
@@ -43,7 +44,7 @@ bool AdapterTrimmer::trimByOverlapAnalysis(Read* r1, Read* r2, FilterResult* fr,
     return false;
 }
 
-bool AdapterTrimmer::trimByMultiSequences(Read* r, FilterResult* fr, vector<string>& adapterList, bool isR2, bool incTrimmedCounter) {
+bool AdapterTrimmer::trimByMultiSequences(Read* r, FilterResult* fr, vector<string>& adapterList, bool isR2, bool incTrimmedCounter, int minTrimLength) {
     int matchReq = 4;
     if(adapterList.size() > 16)
         matchReq = 5;
@@ -53,7 +54,7 @@ bool AdapterTrimmer::trimByMultiSequences(Read* r, FilterResult* fr, vector<stri
 
     string* originalSeq = r->mSeq;
     for(int i=0; i<adapterList.size(); i++) {
-        trimmed |= trimBySequence(r, NULL, adapterList[i], isR2, matchReq);
+        trimmed |= trimBySequence(r, NULL, adapterList[i], isR2, matchReq, minTrimLength);
     }
 
     if(trimmed) {
@@ -67,7 +68,7 @@ bool AdapterTrimmer::trimByMultiSequences(Read* r, FilterResult* fr, vector<stri
     return trimmed;
 }
 
-bool AdapterTrimmer::trimBySequence(Read* r, FilterResult* fr, string& adapterseq, bool isR2, int matchReq) {
+bool AdapterTrimmer::trimBySequence(Read* r, FilterResult* fr, string& adapterseq, bool isR2, int matchReq, int minTrimLength) {
     const int allowOneMismatchForEach = 8;
 
     int rlen = r->length();
@@ -120,10 +121,12 @@ bool AdapterTrimmer::trimBySequence(Read* r, FilterResult* fr, string& adapterse
             }
 
         } else {
-            string adapter = r->mSeq->substr(pos, rlen-pos);
-            r->resize(pos);
-            if(fr) {
-                fr->addAdapterTrimmed(adapter, isR2);
+            if(rlen - pos >= minTrimLength) {
+                string adapter = r->mSeq->substr(pos, rlen-pos);
+                r->resize(pos);
+                if(fr) {
+                    fr->addAdapterTrimmed(adapter, isR2);
+                }
             }
         }
         return true;

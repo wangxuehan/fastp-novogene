@@ -371,12 +371,15 @@ public:
     int overlapRequire;
     int overlapDiffLimit;
     int overlapDiffPercentLimit;
+    int minTrimLength;
     // output debug information
     bool verbose;
     // merge options
     MergeOptions merge;
     // the buffer size for writer
     size_t writerBufferSize;
+    bool byCleanData;
+    long clean;
 
 };
 

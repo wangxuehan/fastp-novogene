@@ -2,7 +2,17 @@
 
 This is a modified version, contains function of length limitation of adapter trimming. For more detailed information, please refer to [fastp](https://github.com/OpenGene/fastp). And a prebuiled binary file based on linux system is under centos directory.
 
-
+## get fastp-novogene
+### use release binary
+```shell
+./bin/fastp -v
+```
+### compile from source
+```shell
+make
+make install
+./bin/fastp -v
+```
 
 ## Modified 2021/11/24
 1. add --min_trim_length option, which is used to limit the length of adapter trimming, default 10.
